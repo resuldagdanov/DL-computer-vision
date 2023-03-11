@@ -7,8 +7,13 @@ conda create -n cv python=3.7
 conda activate cv
 ```
 
+Install PyTorch from this [link](https://pytorch.org/).
+```python
+conda install pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch -c nvidia
+```
+
 ```sh
-pip install -r requirements.txt
+pip install matplotlib
 ```
 
 NOTE: please follow readme for each assignement under folders, thanks ;)
