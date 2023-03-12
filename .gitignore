@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+*.tar.gz
+/assignment1/cifar-10-batches-py/*
+/assignment1/.ipynb_checkpoints/*

@@ -2,7 +2,9 @@
   Implements a K-Nearest Neighbor classifier in PyTorch.
 """
 import torch
+import math
 import statistics
+import numpy as np
 
 
 def hello():
@@ -13,8 +15,8 @@ def hello():
   print("Hello from knn.py!")
 
 
-def compute_distances_two_loops(x_train,
-                                x_test):
+def compute_distances_two_loops(x_train: torch.Tensor,
+                                x_test: torch.Tensor):
   """
     Computes the squared Euclidean distance between each element of the training
     set and each element of the test set. Images should be flattened and treated
@@ -25,7 +27,7 @@ def compute_distances_two_loops(x_train,
 
     The input data may have any number of dimensions -- for example this function
     should be able to compute nearest neighbor between vectors, in which case
-    the inputs will have shape (num_{train, test}, D); it should alse be able to
+    the inputs will have shape (num_{train, test}, D); it should also be able to
     compute nearest neighbors between images, where the inputs will have shape
     (num_{train, test}, C, H, W). More generally, the inputs will have shape
     (num_{train, test}, D1, D2, ..., Dn); you should flatten each element
@@ -52,26 +54,34 @@ def compute_distances_two_loops(x_train,
   # same datatype and device as x_train
   num_train = x_train.shape[0]
   num_test = x_test.shape[0]
+
   dists = x_train.new_zeros(num_train, num_test)
-  
-  ##############################################################################
-  # TODO: Implement this function using a pair of nested loops over the        #
-  # training data and the test data.                                           #
-  #                                                                            #
-  # You may not use torch.norm (or its instance method variant), nor any       #
-  # functions from torch.nn or torch.nn.functional.                            #
-  ##############################################################################
-  # Replace "pass" statement with your code
-  pass
-  ##############################################################################
-  #                             END OF YOUR CODE                               #
-  ##############################################################################
+
+  flattened_x_train = torch.flatten(x_train, start_dim=1, end_dim=-1).numpy()
+  flattened_x_test = torch.flatten(x_test, start_dim=1, end_dim=-1).numpy()
+
+  # (num_train, num_test) -> [i, j]
+  for i in range(num_train):
+    train_vector = flattened_x_train[i]
+
+    for j in range(num_test):
+      test_vector =  flattened_x_test[j]
+
+      # Use math to calculate Euclidean distance
+      # distance = [float((a - b)**2) for a, b in zip(train_vector, test_vector)]
+      # distance = math.sqrt(sum(distance))
+
+      # Use numpy to calculate Euclidean distance
+      distance = np.sqrt(np.sum((train_vector - test_vector)**2, axis=0))
+
+      # Euclidean distance between the ith training point and jth test point
+      dists[i, j] = torch.FloatTensor([distance])
   
   return dists
 
 
-def compute_distances_one_loop(x_train,
-                               x_test):
+def compute_distances_one_loop(x_train: torch.Tensor,
+                               x_test: torch.Tensor):
   """
     Computes the squared Euclidean distance between each element of the training
     set and each element of the test set. Images should be flattened and treated
@@ -100,25 +110,25 @@ def compute_distances_one_loop(x_train,
   # same datatype and device as x_train
   num_train = x_train.shape[0]
   num_test = x_test.shape[0]
+
   dists = x_train.new_zeros(num_train, num_test)
 
-  ##############################################################################
-  # TODO: Implement this function using only a single loop over x_train.       #
-  #                                                                            #
-  # You may not use torch.norm (or its instance method variant), nor any       #
-  # functions from torch.nn or torch.nn.functional.                            #
-  ##############################################################################
-  # Replace "pass" statement with your code
-  pass
-  ##############################################################################
-  #                             END OF YOUR CODE                               #
-  ##############################################################################
+  # Able to handle inputs with any number of dimensions
+  flattened_x_train = torch.flatten(x_train, start_dim=1, end_dim=-1).numpy()
+  flattened_x_test = torch.flatten(x_test, start_dim=1, end_dim=-1).numpy()
+
+  # (num_train, num_test) -> [i, j]
+  for i in range(num_train):
+    train_vector = flattened_x_train[i]
+    
+    distance = np.sqrt(np.sum((train_vector - flattened_x_test)**2, axis=1))
+    dists[i, :] = torch.FloatTensor(distance)
   
   return dists
 
 
-def compute_distances_no_loops(x_train,
-                               x_test):
+def compute_distances_no_loops(x_train: torch.Tensor,
+                               x_test: torch.Tensor):
   """
     Computes the squared Euclidean distance between each element of the training
     set and each element of the test set. Images should be flattened and treated
@@ -145,34 +155,27 @@ def compute_distances_no_loops(x_train,
       point.
   """
 
-  # Initialize dists to be a tensor of shape (num_train, num_test) with the
-  # same datatype and device as x_train
-  num_train = x_train.shape[0]
-  num_test = x_test.shape[0]
-  dists = x_train.new_zeros(num_train, num_test)
-  
-  ##############################################################################
-  # TODO: Implement this function without using any explicit loops and without #
-  # creating any intermediate tensors with O(num_train * num_test) elements.   #
-  #                                                                            #
-  # You may not use torch.norm (or its instance method variant), nor any       #
-  # functions from torch.nn or torch.nn.functional.                            #
-  #                                                                            #
-  # HINT: Try to formulate the Euclidean distance using two broadcast sums     #
-  #       and a matrix multiply.                                               #
-  ##############################################################################
-  # Replace "pass" statement with your code
-  pass
-  ##############################################################################
-  #                             END OF YOUR CODE                               #
-  ##############################################################################
+  # Handle inputs with any number of dimensions
+  flattened_x_train = torch.flatten(x_train, start_dim=1, end_dim=-1).numpy()
+  flattened_x_test = torch.flatten(x_test, start_dim=1, end_dim=-1).numpy()
+
+  # Compute squared distances between all pairs of training and test examples
+  train_squares = np.sum(flattened_x_train ** 2, axis=1, keepdims=True)
+  test_squares = np.sum(flattened_x_test ** 2, axis=1, keepdims=True)
+
+  # Take the dot product between list of vectors
+  cross = np.dot(flattened_x_train, flattened_x_test.T)
+  squared_dists = train_squares + test_squares.T - 2 * cross
+
+  # Take square root to obtain Euclidean distance
+  dists = torch.FloatTensor(np.sqrt(squared_dists))
 
   return dists
 
 
-def predict_labels(dists,
-                   y_train,
-                   k=1):
+def predict_labels(dists: torch.Tensor,
+                   y_train: torch.Tensor,
+                   k: int=1):
   """
     Given distances between all pairs of training and test samples, predict a
     label for each test sample by taking a **majority vote** among its k nearest
@@ -392,5 +395,5 @@ def knn_get_best_k(k_to_accuracies):
   ##############################################################################
   #                            END OF YOUR CODE                                #
   ##############################################################################
-  
+
   return best_k
