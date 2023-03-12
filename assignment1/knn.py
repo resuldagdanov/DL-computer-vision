@@ -205,24 +205,32 @@ def predict_labels(dists: torch.Tensor,
   num_train, num_test = dists.shape
   y_pred = torch.zeros(num_test, dtype=torch.int64)
 
-  ##############################################################################
-  # TODO: Implement this function. You may use an explicit loop over the test  #
-  # samples. Hint: Look up the function torch.topk                             #
-  ##############################################################################
-  # Replace "pass" statement with your code
-  pass
-  ##############################################################################
-  #                             END OF YOUR CODE                               #
-  ##############################################################################
+  for j in range(num_test):
+      # Create a list of tuples, where each tuple contains a training sample's
+      # label and its distance to the jth test sample
+      samples_dist = [(y_train[i], dists[i, j]) for i in range(num_train)]
+
+      # Sort the list of tuples by distance in ascending order
+      sorted_samples_dist = sorted(samples_dist, key=lambda x: x[1])
+
+      # Get the k nearest neighbors' labels from the sorted list
+      closest_y = [x[0] for x in sorted_samples_dist[:k]]
+
+      # Count the number of occurrences of each label
+      label_counts = torch.bincount(torch.tensor(closest_y))
+
+      # Find the label with the most occurrences
+      # In the event of a tie, find the smallest label among the tied labels
+      y_pred[j] = torch.argmax(label_counts)
 
   return y_pred
 
 
-class KnnClassifier:
+class KnnClassifier(object):
 
   def __init__(self,
-               x_train,
-               y_train):
+               x_train: torch.Tensor,
+               y_train: torch.Tensor):
     """
       Create a new K-Nearest Neighbor classifier with the specified training data.
       In the initializer we simply memorize the provided training data.
@@ -232,19 +240,12 @@ class KnnClassifier:
       - y_train: int64 torch tensor of shape (num_train,) giving training labels
     """
 
-    ###########################################################################
-    # TODO: Implement the initializer for this class. It should perform no    #
-    # computation and simply memorize the training data.                      #
-    ###########################################################################
-    # Replace "pass" statement with your code
-    pass
-    ###########################################################################
-    #                           END OF YOUR CODE                              #
-    ###########################################################################
+    self.x_train = x_train
+    self.y_train = y_train
 
   def predict(self,
-              x_test,
-              k=1):
+              x_test: torch.Tensor,
+              k: int=1):
     """
       Make predictions using the classifier.
 
@@ -257,26 +258,19 @@ class KnnClassifier:
         for the test samples.
     """
 
-    y_test_pred = None
+    # Calculate distances between training samples are test samples
+    distances = compute_distances_no_loops(x_train=self.x_train, x_test=x_test)
 
-    ###########################################################################
-    # TODO: Implement this method. You should use the functions you wrote     #
-    # above for computing distances (use the no-loop variant) and to predict  #
-    # output labels.
-    ###########################################################################
-    # Replace "pass" statement with your code
-    pass
-    ###########################################################################
-    #                           END OF YOUR CODE                              #
-    ###########################################################################
+    # Predicted labels for the test data
+    y_test_pred = predict_labels(dists=distances, y_train=self.y_train, k=k)
 
     return y_test_pred
 
   def check_accuracy(self,
-                     x_test,
-                     y_test,
-                     k=1,
-                     quiet=False):
+                     x_test: torch.Tensor,
+                     y_test: torch.Tensor,
+                     k: int=1,
+                     quiet: bool=False):
     """
       Utility method for checking the accuracy of this classifier on test data.
       Returns the accuracy of the classifier on the test data, and also prints a
@@ -294,9 +288,12 @@ class KnnClassifier:
     """
 
     y_test_pred = self.predict(x_test, k=k)
+    
     num_samples = x_test.shape[0]
     num_correct = (y_test == y_test_pred).sum().item()
+    
     accuracy = 100.0 * num_correct / num_samples
+    
     msg = (f'Got {num_correct} / {num_samples} correct; '
            f'accuracy is {accuracy:.2f}%')
     
@@ -306,10 +303,10 @@ class KnnClassifier:
     return accuracy
 
 
-def knn_cross_validate(x_train,
-                       y_train,
-                       num_folds=5,
-                       k_choices=None):
+def knn_cross_validate(x_train: torch.Tensor,
+                       y_train: torch.Tensor,
+                       num_folds: int=5,
+                       k_choices: list=None):
   """
     Perform cross-validation for KnnClassifier.
 
@@ -329,7 +326,7 @@ def knn_cross_validate(x_train,
     # Use default values
     k_choices = [1, 3, 5, 8, 10, 12, 15, 20, 50, 100]
 
-  # First we divide the training data into num_folds equally-sized folds.
+  # First we divide the training data into num_folds equally-sized folds
   x_train_folds = []
   y_train_folds = []
 
@@ -348,7 +345,7 @@ def knn_cross_validate(x_train,
   # A dictionary holding the accuracies for different values of k that we find
   # when running cross-validation. After running cross-validation,
   # k_to_accuracies[k] should be a list of length num_folds giving the different
-  # accuracies we found when trying KnnClassifiers that use k neighbors.
+  # accuracies we found when trying KnnClassifiers that use k neighbors
   k_to_accuracies = {}
 
   ##############################################################################
@@ -388,7 +385,7 @@ def knn_get_best_k(k_to_accuracies):
   ##############################################################################
   # TODO: Use the results of cross-validation stored in k_to_accuracies to     #
   # choose the value of k, and store the result in best_k. You should choose   #
-  # the value of k that has the highest mean accuracy accross all folds.       #
+  # the value of k that has the highest mean accuracy accross all folds        #
   ##############################################################################
   # Replace "pass" statement with your code
   pass
