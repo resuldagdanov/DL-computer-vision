@@ -3,8 +3,6 @@ import zipfile
 
 
 _A1_FILES = [
-  'pytorch101.py',
-  'pytorch101.ipynb',
   'knn.py',
   'knn.ipynb',
 ]
