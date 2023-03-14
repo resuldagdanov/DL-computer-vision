@@ -326,45 +326,41 @@ def knn_cross_validate(x_train: torch.Tensor,
     # Use default values
     k_choices = [1, 3, 5, 8, 10, 12, 15, 20, 50, 100]
 
-  # First we divide the training data into num_folds equally-sized folds
-  x_train_folds = []
-  y_train_folds = []
-
-  ##############################################################################
-  # TODO: Split the training data and images into folds. After splitting,      #
-  # x_train_folds and y_train_folds should be lists of length num_folds, where #
-  # y_train_folds[i] is the label vector for images in x_train_folds[i].       #
-  # Hint: torch.chunk                                                          #
-  ##############################################################################
-  # Replace "pass" statement with your code
-  pass
-  ##############################################################################
-  #                            END OF YOUR CODE                                #
-  ##############################################################################
+  # Divide the training data into num_folds equally-sized folds
+  x_data_folds = torch.chunk(x_train, num_folds, dim=0)
+  y_data_folds = torch.chunk(y_train, num_folds, dim=0)
 
   # A dictionary holding the accuracies for different values of k that we find
   # when running cross-validation. After running cross-validation,
   # k_to_accuracies[k] should be a list of length num_folds giving the different
   # accuracies we found when trying KnnClassifiers that use k neighbors
   k_to_accuracies = {}
+  
+  # For each value of k, run the KnnClassifier num_folds times. Store the accuracies
+  # for all fold and all values of k in the k_to_accuracies dictionary
+  for k in k_choices:
+    k_to_accuracies[k] = []
+    print("\n#k = " + str(k))
 
-  ##############################################################################
-  # TODO: Perform cross-validation to find the best value of k. For each value #
-  # of k in k_choices, run the k-nearest-neighbor algorithm num_folds times;   #
-  # in each case you'll use all but one fold as training data, and use the     #
-  # last fold as a validation set. Store the accuracies for all folds and all  #
-  # values in k in k_to_accuracies.   HINT: torch.cat                          #
-  ##############################################################################
-  # Replace "pass" statement with your code
-  pass
-  ##############################################################################
-  #                            END OF YOUR CODE                                #
-  ##############################################################################
+    # Use all folds except the i-th fold as training data
+    for ith_fold in range(num_folds):
 
+      # Train and test splits with folded dataset
+      x_train_fold = torch.cat(x_data_folds[: ith_fold] + x_data_folds[ith_fold + 1 :], dim=0)
+      y_train_fold = torch.cat(y_data_folds[: ith_fold] + y_data_folds[ith_fold + 1 :], dim=0)
+      x_test_fold = x_data_folds[ith_fold]
+      y_test_fold = y_data_folds[ith_fold]
+
+      # Create a K-Nearest Neighbors Classifier object instance
+      classifier = KnnClassifier(x_train_fold, y_train_fold)
+
+      accuracy = classifier.check_accuracy(x_test_fold, y_test_fold, k=k)
+      k_to_accuracies[k].append(accuracy)
+  
   return k_to_accuracies
 
 
-def knn_get_best_k(k_to_accuracies):
+def knn_get_best_k(k_to_accuracies: dict):
   """
     Select the best value for k, from the cross-validation result from
     knn_cross_validate. If there are multiple k's available, then you SHOULD
@@ -381,16 +377,15 @@ def knn_get_best_k(k_to_accuracies):
   """
 
   best_k = 0
+  best_accuracy = 0.0
 
-  ##############################################################################
-  # TODO: Use the results of cross-validation stored in k_to_accuracies to     #
-  # choose the value of k, and store the result in best_k. You should choose   #
-  # the value of k that has the highest mean accuracy accross all folds        #
-  ##############################################################################
-  # Replace "pass" statement with your code
-  pass
-  ##############################################################################
-  #                            END OF YOUR CODE                                #
-  ##############################################################################
+  # Find the best k
+  for k in k_to_accuracies:
+    accuracies = k_to_accuracies[k]
+    mean_accuracy = np.mean(accuracies)
+
+    if mean_accuracy > best_accuracy:
+      best_accuracy = mean_accuracy
+      best_k = k
 
   return best_k
