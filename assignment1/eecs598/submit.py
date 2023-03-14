@@ -8,13 +8,16 @@ _A1_FILES = [
 ]
 
 
-def make_a1_submission(assignment_path):
+def make_a1_submission(assignment_path: str):
   _make_submission(assignment_path, _A1_FILES, 'A1')
 
 
-def _make_submission(assignment_path, file_list, assignment_no):
+def _make_submission(assignment_path: str,
+                     file_list: list,
+                     assignment_no: str):
   uniquename, umid = _get_user_info()
-  zip_path = '%s_%s_{}.zip' % (uniquename, umid, assignment_no)
+  
+  zip_path = '%s_%s_%s.zip' % (str(uniquename), str(umid), str(assignment_no))
   zip_path = os.path.join(assignment_path, zip_path)
   
   print('Writing zip file to: ', zip_path)
