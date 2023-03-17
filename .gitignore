@@ -131,3 +131,6 @@ dmypy.json
 *.tar.gz
 /assignment1/cifar-10-batches-py/*
 /assignment1/.ipynb_checkpoints/*
+
+/assignment2/cifar-10-batches-py/*
+/assignment2/.ipynb_checkpoints/*
