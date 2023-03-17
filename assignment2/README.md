@@ -9,3 +9,16 @@ Please run the following jupyter notebook to evaluate the written functions:
 ```bash
 jupyter notebook linear_classifier.ipynb
 ```
+
+### The Goals of The Assignment
+* Implement and apply a Multiclass Support Vector Machine (SVM) classifier
+* Implement and apply a Softmax classifier
+* Implement and apply a Two-layer Neural Network classifier
+* Understand the differences and tradeoffs between these classifiers
+* Practice implementing vectorized gradient code by checking against naive implementations, and using numeric gradient checking
+
+### The Reports
+Please check the following folder for the reports:
+```bash
+cd reports
+```
