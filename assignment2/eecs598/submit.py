@@ -4,11 +4,11 @@ import zipfile
 _A2_FILES = [
   'linear_classifier.py',
   'linear_classifier.ipynb',
-  'two_layer_net.py',
-  'two_layer_net.ipynb',
+  # 'two_layer_net.py',
+  # 'two_layer_net.ipynb',
   'svm_best_model.pt',
   'softmax_best_model.pt',
-  'nn_best_model.pt',
+  # 'nn_best_model.pt',
 ]
 
 
@@ -25,7 +25,7 @@ def _make_submission(assignment_path: str,
                      umid: str=None):
   
   if uniquename is None or umid is None:
-    uniquename, umid = _get_user_info()
+    uniquename, umid = _get_user_info(uniquename, umid)
   
   zip_path = '{}_{}_{}.zip'.format(uniquename, umid, assignment_no)
   zip_path = os.path.join(assignment_path, zip_path)
@@ -43,7 +43,8 @@ def _make_submission(assignment_path: str,
       zf.write(in_path, filename)
 
 
-def _get_user_info():
+def _get_user_info(uniquename: str=None,
+                   umid: str=None):
   if uniquename is None:
     uniquename = input('Enter your uniquename (e.g. justincj): ')
 
