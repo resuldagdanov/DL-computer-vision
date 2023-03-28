@@ -15,7 +15,6 @@ def hello_linear_classifier():
   print('Hello from linear_classifier.py!')
 
 
-# Template class modules that we will use later: Do not edit/modify this class
 class LinearClassifier(object):
   """
     An abstarct class for the linear classifiers
@@ -147,25 +146,28 @@ def svm_loss_naive(W: torch.Tensor,
     - gradient of loss with respect to weights W; a tensor of same shape as W
   """
 
-  # initialize the gradient as zero
+  # Initialize the gradient as zero
   dW = torch.zeros_like(W)
 
-  # compute the loss and the gradient
+  # Compute the loss and the gradient
   num_classes = W.shape[1]
   num_train = X.shape[0]
   
   loss = 0.0
+  delta = 1.0
   
   for i in range(num_train):
+    # Take the transpose and apply matrix-vector product to calculate scores
     scores = W.t().mv(X[i])
     correct_class_score = scores[y[i]]
     
     for j in range(num_classes):
+      # Skip correct class label loss
       if j == y[i]:
         continue
       
-      # note delta = 1
-      margin = scores[j] - correct_class_score + 1
+      # calculate the margin within delta threshold
+      margin = scores[j] - correct_class_score + delta
       
       if margin > 0:
         loss += margin
@@ -181,7 +183,7 @@ def svm_loss_naive(W: torch.Tensor,
   # to be an average instead so we divide by num_train.
   loss /= num_train
 
-  # Add regularization to the loss.
+  # Add regularization to the loss
   loss += reg * torch.sum(W * W)
 
   # Compute the gradient of the loss function and store it in dW. (part 2)
@@ -195,7 +197,7 @@ def svm_loss_vectorized(W: torch.Tensor,
                         y: torch.Tensor,
                         reg: float):
   """
-    Structured SVM loss function, vectorized implementation. When you implment
+    Structured SVM loss function, vectorized implementation. When you implement
     the regularization over W, please DO NOT multiply the regularization term by
     1/2 (no coefficient). The inputs and outputs are the same as svm_loss_naive.
 
@@ -215,24 +217,33 @@ def svm_loss_vectorized(W: torch.Tensor,
   dW = torch.zeros_like(W)
 
   loss = 0.0
+  delta = 1.0
 
-  # Implement a vectorized version of the structured SVM loss, storing the result in loss.
+  # Implement a vectorized version of the structured SVM loss, storing the result in loss
   N, D = X.shape
   C = W.shape[1]
 
   # shape: (N, C)
+  # Matrix multiplication between the input values and the weight matrix
   scores = X.mm(W)
   # shape: (N,)
+  # Extract correct class scores for all classes in a vector format
   correct_class_scores = scores[torch.arange(N), y]
 
   # shape: (N, C)
-  margins = scores - correct_class_scores.view(-1, 1) + 1
-  # set the margin to 0 for the correct class
+  # Calculate the margins for all classes
+  margins = scores - correct_class_scores.view(-1, 1) + delta
+
+  # Set the margin to 0 for the correct class
   margins[torch.arange(N), y] = 0
 
-  # Compute the loss
+  # Compute the loss. Only include positive margins, so use ReLU function
   loss = torch.sum(torch.relu(margins))
+  
+  # Calculate average loss
   loss /= N
+
+  # Add regularization to the loss
   loss += reg * torch.sum(W * W)
 
   # Compute the gradient
@@ -262,7 +273,9 @@ def sample_batch(X: torch.Tensor,
   # Store the data in X_batch and their corresponding labels in
   # y_batch; after sampling, X_batch should have shape (batch_size, dim)
   # and y_batch should have shape (batch_size,)
-  idx = torch.randint(low=0, high=num_train, size=(batch_size,))
+  idx = torch.randint(low=0,
+                      high=num_train,
+                      size=(batch_size, ))
 
   # Use the indices to select a random subset of the data and labels
   X_batch = X[idx]
@@ -304,13 +317,16 @@ def train_linear_classifier(loss_func,
       training iteration.
   """
 
-  # assume y takes values 0...K-1 where K is number of classes
+  # Assume y takes values in number of classes
   num_train, dim = X.shape
 
   if W is None:
-    # lazily initialize W
+    # Lazily initialize W
     num_classes = torch.max(y) + 1
-    W = 0.000001 * torch.randn(dim, num_classes, device=X.device, dtype=X.dtype)
+    W = 0.000001 * torch.randn(dim,
+                               num_classes,
+                               device=X.device,
+                               dtype=X.dtype)
   
   else:
     num_classes = W.shape[1]
@@ -319,16 +335,22 @@ def train_linear_classifier(loss_func,
   loss_history = []
   
   for it in range(num_iters):
-    # implement sample_batch function
-    X_batch, y_batch = sample_batch(X, y, num_train, batch_size)
+    # Implement sample_batch function
+    X_batch, y_batch = sample_batch(X=X,
+                                    y=y,
+                                    num_train=num_train,
+                                    batch_size=batch_size)
 
-    # evaluate loss and gradient
-    loss, grad = loss_func(W, X_batch, y_batch, reg)
+    # Evaluate loss and gradient
+    loss, dW = loss_func(W=W,
+                         X=X_batch,
+                         y=y_batch,
+                         reg=reg)
     loss_history.append(loss.item())
 
     # Perform parameter update
     # Update the weights using the gradient and the learning rate.
-    W -= learning_rate * grad
+    W -= learning_rate * dW
 
     if verbose and it % 100 == 0:
       print('iteration %d / %d: loss %f' % (it, num_iters, loss))
@@ -352,7 +374,7 @@ def predict_linear_classifier(W: torch.Tensor,
       elemment of X. Each element of y_pred should be between 0 and C - 1.
   """
 
-  # Implement this method. Store the predicted labels in y_pred
+  # Store the predicted labels in y_pred
   scores = X.mm(W)
   y_pred = torch.argmax(scores, dim=1)
   
@@ -371,7 +393,7 @@ def svm_get_search_params():
                                 e.g. [1e0, 1e1, ...]
   """
 
-  # add your own hyper parameter lists. 
+  # Add your own hyper parameter lists
   learning_rates = [5e-4, 1e-3, 5e-3, 1e-2, 5e-2]
   regularization_strengths = [1e-4, 5e-4, 1e-3, 5e-3, 1e-2]
 
@@ -406,7 +428,7 @@ def test_one_param_set(cls: LinearClassifier,
   """
 
   # The accuracy is simply the fraction of data points
-  # that are correctly classified.
+  # that are correctly classified
   train_acc = 0.0
   val_acc = 0.0
 
@@ -461,17 +483,24 @@ def softmax_loss_naive(W: torch.Tensor,
   num_classes = W.shape[1]
 
   for i in range(num_train):
+    # Multiple input vector by weight matrix
     scores = X[i] @ W # X[i].view(-1, 1).mm(W.T)
-    scores -= torch.max(scores)  # For numerical stability
 
+    # For numerical stability
+    scores -= torch.max(scores)
+
+    # Compute the probability
     exp_scores = torch.exp(scores)
     probs = exp_scores / torch.sum(exp_scores)
 
+    # Calcılate loss output
     loss += -torch.log(probs[y[i]])
 
     # Compute the gradient
     dscores = probs.clone()
     dscores[y[i]] -= 1
+
+    # Get the gradient matrix
     dW += X[i].view(-1, 1) @ dscores.view(1, -1) # X[i].view(-1, 1).mm(dscores.view(1, -1))
 
   # Average the loss and gradient
@@ -505,9 +534,15 @@ def softmax_loss_vectorized(W: torch.Tensor,
 
   # Compute the scores and the softmax loss
   scores = X @ W
-  scores -= scores.max(dim=1, keepdim=True).values  # For numerical stability
+
+  # For numerical stability
+  scores -= scores.max(dim=1, keepdim=True).values
+
+  # Compute the probability
   exp_scores = torch.exp(scores)
   softmax_probs = exp_scores / exp_scores.sum(dim=1, keepdim=True)
+  
+  # Calcılate loss output
   loss = -torch.log(softmax_probs[range(num_train), y]).sum()
 
   # Compute the gradient
@@ -537,7 +572,7 @@ def softmax_get_search_params():
                                 e.g. [1e0, 1e1, ...]
   """
   
-  # add your own hyper parameter lists. 
+  # Add your own hyper parameter lists
   learning_rates = [1e-5, 1e-4, 1e-3, 1e-2, 1e-1]
   regularization_strengths = [1e-3, 1e-2, 1e-1, 1e0, 1e1]
 
