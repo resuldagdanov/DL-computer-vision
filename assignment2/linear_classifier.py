@@ -342,10 +342,10 @@ def train_linear_classifier(loss_func,
                                     batch_size=batch_size)
 
     # Evaluate loss and gradient
-    loss, dW = loss_func(W=W,
-                         X=X_batch,
-                         y=y_batch,
-                         reg=reg)
+    loss, dW = loss_func(W,
+                         X_batch,
+                         y_batch,
+                         reg)
     loss_history.append(loss.item())
 
     # Perform parameter update
