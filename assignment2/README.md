@@ -6,8 +6,19 @@ The notebook linear_classifier.ipynb will walk through implementing a Linear cla
 
 Please run the following jupyter notebook to evaluate the written functions:
 
+1. For SVM and Softmax linear classifier:
 ```bash
 jupyter notebook linear_classifier.ipynb
+```
+
+### Two Layer Neural Network
+The notebook two_layer_net.ipynb will walk through implementing a Linear classifier. The implementation will go to two_layer_net.py.
+
+Please run the following jupyter notebook to evaluate the written functions:
+
+2. For two layer neural network classifier:
+```bash
+jupyter notebook two_layer_net.ipynb
 ```
 
 ### The Goals of The Assignment
