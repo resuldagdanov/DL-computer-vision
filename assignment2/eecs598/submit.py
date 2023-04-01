@@ -4,11 +4,11 @@ import zipfile
 _A2_FILES = [
   'linear_classifier.py',
   'linear_classifier.ipynb',
-  # 'two_layer_net.py',
-  # 'two_layer_net.ipynb',
+  'two_layer_net.py',
+  'two_layer_net.ipynb',
   'svm_best_model.pt',
   'softmax_best_model.pt',
-  # 'nn_best_model.pt',
+  'nn_best_model.pt',
 ]
 
 
