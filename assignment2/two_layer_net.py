@@ -123,22 +123,17 @@ def nn_forward_pass(params: dict,
     # Unpack variables from the params dictionary
     W1, b1 = params['W1'], params['b1']
     W2, b2 = params['W2'], params['b2']
+
     N, D = X.shape
 
-    # Compute the forward pass
-    hidden = None
-    scores = None
+    # Fully-connected layer with bias
+    hidden = torch.matmul(X, W1) + b1
 
-    ############################################################################
-    # TODO: Perform the forward pass, computing the class scores for the input.#
-    # Store the result in the scores variable, which should be an tensor of    #
-    # shape (N, C).                                                            #
-    ############################################################################
-    # Replace "pass" statement with your code
-    pass
-    ###########################################################################
-    #                             END OF YOUR CODE                            #
-    ###########################################################################
+    # Rectified linear unit
+    hidden = torch.max(torch.zeros_like(hidden), hidden)
+
+    # Fully-connected layer with bias
+    scores = torch.matmul(hidden, W2) + b2
 
     return scores, hidden
 
@@ -180,45 +175,57 @@ def nn_forward_backward(params: dict,
     # Unpack variables from the params dictionary
     W1, b1 = params['W1'], params['b1']
     W2, b2 = params['W2'], params['b2']
+
     N, D = X.shape
 
-    scores, h1 = nn_forward_pass(params, X)
+    # Compute the forward pass
+    scores, hidden = nn_forward_pass(params, X)
+
     # If the targets are not given then jump out, we're done
     if y is None:
       return scores
 
-    # Compute the loss
-    loss = None
+    # Calculate the Softmax classifier loss
+    exp_scores = torch.exp(scores - torch.max(scores,
+                                              dim=1,
+                                              keepdim=True).values)
+    softmax_scores = exp_scores / torch.sum(exp_scores,
+                                            dim=1,
+                                            keepdim=True)
+    data_loss = -torch.mean(torch.log(softmax_scores[range(N), y]))
 
-    ############################################################################
-    # TODO: Compute the loss, based on the results from nn_forward_pass.       #
-    # This should include both the data loss and L2 regularization for W1 and  #
-    # W2. Store the result in the variable loss, which should be a scalar. Use #
-    # the Softmax classifier loss. When you implment the regularization over W,#
-    # please DO NOT multiply the regularization term by 1/2 (no coefficient).  #
-    # If you are not careful here, it is easy to run into numeric instability  #
-    # (Check Numeric Stability in http://cs231n.github.io/linear-classify/).   #
-    ############################################################################
-    # Replace "pass" statement with your code
-    pass
-    ###########################################################################
-    #                             END OF YOUR CODE                            #
-    ###########################################################################
+    # Add L2 regularization for W1 and W2 to the loss
+    reg_loss = reg * (torch.sum(W1 * W1) + torch.sum(W2 * W2))
+    loss = data_loss + reg_loss
 
-    # Backward pass: compute gradients
-    grads = {}
+    # Gradient and take average of last output layer output by the batch size
+    diff_scores = softmax_scores.clone()
+    diff_scores[torch.arange(N), y] -= 1
+    diff_scores /= N
 
-    ###########################################################################
-    # TODO: Compute the backward pass, computing the derivatives of the       #
-    # weights and biases. Store the results in the grads dictionary.          #
-    # For example, grads['W1'] should store the gradient on W1, and be a      #
-    # tensor of same size                                                     #
-    ###########################################################################
-    # Replace "pass" statement with your code
-    pass
-    ###########################################################################
-    #                             END OF YOUR CODE                            #
-    ###########################################################################
+    # gradients for second layer weights
+    diff_W2 = hidden.t() @ diff_scores
+    # gradients for second layer biases
+    diff_b2 = torch.sum(diff_scores, dim=0)
+
+    # gradient of ReLU
+    diff_hidden = diff_scores @ W2.t()
+    diff_hidden[hidden <= 0] = 0
+
+    # gradients for first layer weights
+    diff_W1 = X.t() @ diff_hidden
+
+    # gradients for first layer biases
+    diff_b1 = torch.sum(diff_hidden, dim=0)
+
+    # Add regularization gradient contribution
+    # DO NOT multiply the regularization term by 1/2 (no coefficient)
+    diff_W2 += reg * W2
+    diff_W1 += reg * W1
+
+    # Store the derivatives of the weights and biases in the dictionary
+    grads = {"W1": diff_W1, "b1": diff_b1,
+             "W2": diff_W2, "b2": diff_b2}
 
     return loss, grads
 
