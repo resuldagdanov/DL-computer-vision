@@ -214,7 +214,6 @@ def nn_forward_backward(params: dict,
 
     # gradients for first layer weights
     diff_W1 = X.t() @ diff_hidden
-
     # gradients for first layer biases
     diff_b1 = torch.sum(diff_hidden, dim=0)
 
@@ -373,10 +372,10 @@ def nn_get_search_params():
   """
 
   # Add your own hyper parameter lists
-  learning_rates = [5e-4, 1e-3, 5e-3, 1e-2, 5e-2]
-  regularization_strengths = [1e-4, 5e-4, 1e-3, 5e-3, 1e-2]
-  hidden_sizes = [16, 32, 64, 128, 256]
-  learning_rate_decays = [1.0, 0.99, 0.97, 0.95, 0.92]
+  learning_rates = [5e-4, 1e-3, 5e-3, 1e-2, 5e-2, 1e0]
+  regularization_strengths = [1e-4, 5e-4, 1e-3, 5e-3, 1e-2, 1e-5]
+  hidden_sizes = [16, 32, 64, 128, 256, 512, 1024]
+  learning_rate_decays = [1.0, 0.99, 0.98, 0.97, 0.95, 0.92]
 
   return learning_rates, hidden_sizes, regularization_strengths, learning_rate_decays
 
@@ -410,6 +409,9 @@ def find_best_net(data_dict: dict,
     - best_val_acc (float): validation accuracy of the best_net
   """
 
+  num_classes = 10
+  num_iters = 3000
+
   best_net = None
   best_stat = None
   best_val_acc = 0.0
@@ -430,8 +432,9 @@ def find_best_net(data_dict: dict,
                 # Create two layer neural network
                 network = TwoLayerNet(input_size=X_train.shape[1],
                                       hidden_size=hiddens,
-                                      output_size=10,
-                                      dtype=torch.float32)
+                                      output_size=num_classes,
+                                      dtype=X_train.dtype,
+                                      device=X_train.device)
               
                 # Train the network
                 statistics = network.train(X=X_train,
@@ -440,12 +443,13 @@ def find_best_net(data_dict: dict,
                                            y_val=y_val,
                                            learning_rate=learnings,
                                            learning_rate_decay=decays,
-                                           reg=regularizations)
+                                           reg=regularizations,
+                                           num_iters=num_iters)
                 
                 # Evaluate the trained neural network model
-                y_val_pred = network.predict(data_dict['X_val']) == data_dict['y_val']
-                val_accuracy = (y_val_pred == y_val).float().mean().item()
-
+                y_val_pred = network.predict(X_val)
+                val_accuracy = 100 * (y_val_pred == y_val).double().mean().item()
+                
                 # Check if current hyperparameters give better accuracy
                 if val_accuracy > best_val_acc:
                     best_net = network
