@@ -134,3 +134,6 @@ dmypy.json
 
 /assignment2/cifar-10-batches-py/*
 /assignment2/.ipynb_checkpoints/*
+
+/assignment3/cifar-10-batches-py/*
+/assignment3/.ipynb_checkpoints/*
