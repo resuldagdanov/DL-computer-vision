@@ -1,9 +1,11 @@
 import os
 import zipfile
 
+
 _A1_FILES = [
     "pytorch101.py",
     "pytorch101.ipynb",
+
     "knn.py",
     "knn.ipynb",
 ]
@@ -11,8 +13,10 @@ _A1_FILES = [
 _A2_FILES = [
     "linear_classifier.py",
     "linear_classifier.ipynb",
+
     "two_layer_net.py",
     "two_layer_net.ipynb",
+
     "svm_best_model.pt",
     "softmax_best_model.pt",
     "nn_best_model.pt",
@@ -21,12 +25,14 @@ _A2_FILES = [
 _A3_FILES = [
     "fully_connected_networks.py",
     "fully_connected_networks.ipynb",
-    #"convolutional_networks.py",
-    #"convolutional_networks.ipynb",
+    
+    "convolutional_networks.py",
+    "convolutional_networks.ipynb",
+
     "best_overfit_five_layer_net.pth",
     "best_two_layer_net.pth",
-    #"one_minute_deepconvnet.pth",
-    #"overfit_deepconvnet.pth",
+    "one_minute_deepconvnet.pth",
+    "overfit_deepconvnet.pth",
 ]
 
 
