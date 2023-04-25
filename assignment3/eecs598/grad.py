@@ -104,7 +104,7 @@ def compute_numeric_gradient(f,
         dfdxi = (fxph - fxmh) / (2 * h)
 
         # use chain rule to compute dLdx
-        flat_grad[i] = dLdf.dot(dfdxi).item()
+        flat_grad[i] = dLdf.float().dot(dfdxi.to(x.device).float()).item()
 
     # Note that since flat_grad was only a reference to grad,
     # we can just return the object in the shape of x by returning grad
