@@ -36,17 +36,10 @@ class Linear(object):
       - out: output, of shape (N, M)
       - cache: (x, w, b)
     """
-
-    N = x.shape[0]
-
     # reshape to (N, D)
-    x_flattened = x.view(N, -1)
-
-    # (N, M)
-    out = torch.mm(x_flattened, w) + b
+    out=torch.reshape(x,(x.shape[0], -1)).mm(w) + b
 
     cache = (x, w, b)
-
     return out, cache
 
   @staticmethod
@@ -67,23 +60,11 @@ class Linear(object):
     """
 
     x, w, b = cache
-
-    # batch size
-    N = x.shape[0]
-
-    # reshape to (N, D)
-    x_flattened = x.view(N, -1)
     
-    # gradient of the weights
-    dw = x_flattened.T @ dout
-    
-    # gradient of the biases
-    db = dout.sum(dim=0)
+    dx = torch.reshape(dout.mm(w.t()),x.shape)
+    dw = torch.reshape(x,(x.shape[0], -1)).t().mm(dout)
+    db = torch.sum(dout, 0)
 
-    # gradient of the inputs
-    dx = dout @ w.T
-    dx = dx.view(*x.shape)
-    
     return dx, dw, db
 
 
