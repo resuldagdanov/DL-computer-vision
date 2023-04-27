@@ -56,35 +56,28 @@ class Conv(object):
     pad = conv_param['pad']
 
     # Pad the input
-    x_padded = torch.nn.functional.pad(x, (pad, pad, pad, pad))
+    x_padded = torch.nn.functional.pad(x, (pad, pad, pad, pad)).to(x.dtype).to(x.device)
 
     # Extract the shapes
     N, C, H, W = x.shape
-    F, _, HH, WW = w.shape
+    CC, _, HH, WW = w.shape
 
     # Compute the output shape
     H_out = 1 + (H + 2 * pad - HH) // stride
     W_out = 1 + (W + 2 * pad - WW) // stride
 
     # Allocate memory for the output
-    out = torch.zeros((N, F, H_out, W_out))
+    out = torch.zeros((N, CC, H_out, W_out)).to(x.dtype).to(x.device)
 
     # Perform the convolution
     for n in range(N):
-      for f in range(F):
+      for c in range(CC):
+
         for i in range(H_out):
           for j in range(W_out):
-            # Compute the receptive field for the current filter
-            h_start = i * stride
-            h_end = h_start + HH
-            w_start = j * stride
-            w_end = w_start + WW
-
-            # Extract the input slice
-            x_slice = x_padded[n, :, h_start:h_end, w_start:w_end]
 
             # Compute the convolution
-            out[n, f, i, j] = torch.sum(x_slice * w[f]) + b[f]
+            out[n, c, j, i] = (x_padded[n, :, j * stride : j * stride + HH, i * stride : i * stride + WW] * w[c, :, :, :]).sum() + b[c]
 
     cache = (x, w, b, conv_param)
 
@@ -114,12 +107,12 @@ class Conv(object):
     stride = conv_param.get('stride', 1)
     pad = conv_param.get('pad', 0)
 
-    # Padding
-    x_pad = torch.nn.functional.pad(x, (pad,pad,pad,pad)).to(x.dtype).to(x.device)
+    # Apply padding
+    x_pad = torch.nn.functional.pad(x, (pad, pad, pad, pad)).to(x.dtype).to(x.device)
     H_size = 1 + (H + 2 * pad - height) // stride
     W_size = 1 + (W + 2 * pad - width) // stride
 
-    # Construct output
+    # Construct the output
     dx_pad = torch.zeros_like(x_pad).to(x.dtype).to(x.device)
     dx = torch.zeros_like(x).to(x.dtype).to(x.device)
     dw = torch.zeros_like(w).to(x.dtype).to(x.device)
@@ -134,11 +127,11 @@ class Conv(object):
         for h_ in range(0, H_size):
           for w_ in range(0, W_size):
 
-            dw[c] += x_pad[n, :, h_ * stride:h_ * stride + height, w_ * stride:w_ * stride + width] * dout[n, c, h_, w_]
-            dx_pad[n, :, h_ * stride:h_ * stride + height, w_ * stride:w_ * stride + width] += w[c] * dout[n, c, h_, w_]
+            dw[c] += x_pad[n, :, h_ * stride : h_ * stride + height, w_ * stride : w_ * stride + width] * dout[n, c, h_, w_]
+            dx_pad[n, :, h_ * stride : h_ * stride + height, w_ * stride : w_ * stride + width] += w[c] * dout[n, c, h_, w_]
     
     # Extract dx from dx_pad
-    dx = dx_pad[:, :, pad:pad+H, pad:pad+W]
+    dx = dx_pad[:, :, pad : pad + H, pad : pad + W]
     
     return dx, dw, db
 
